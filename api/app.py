@@ -1,20 +1,10 @@
-from flask import Flask, render_template
-import time
-from threading import Thread, Lock
+from flask import Flask
 
 app = Flask(__name__)
-lock = Lock()
 
-def animate_text(text, delay=0.1):
-    """Animate text with character-by-character output."""
-    result = ""
-    for char in text:
-        result += char
-        time.sleep(delay)
-    return result
-
-def render_lyrics():
-    """Generate the animated lyrics as HTML."""
+@app.route('/')
+def sing():
+    """Render the song with client-side animation."""
     lyrics = [
         ("Do you think I have forgotten?", 0.1),
         ("Do you think I have forgotten?", 0.1),
@@ -27,16 +17,16 @@ def render_lyrics():
         ("I think about youuuuuuuuuuuuuuuuuuuuuuuuuuu", 0.1)
     ]
     
-    result = ""
-    for lyric, speed in lyrics:
-        result += animate_text(lyric, speed) + "\n"
+    lyrics_json = []
+    delays = [0.3, 5.0, 10.0, 15.0, 20.3, 25.0, 27.0, 30.2, 33.3]
     
-    return result
-
-@app.route('/')
-def sing():
-    """Render the song with client-side animation."""
-    lyrics_html = render_lyrics()
+    for i, (lyric, speed) in enumerate(lyrics):
+        lyrics_json.append({
+            'text': lyric,
+            'delay': delays[i],
+            'speed': speed
+        })
+    
     return f"""
     <!DOCTYPE html>
     <html>
@@ -49,17 +39,50 @@ def sing():
                 color: #00ff00;
                 padding: 40px;
                 min-height: 100vh;
+                margin: 0;
             }}
-            pre {{
+            #lyrics {{
                 font-size: 18px;
                 line-height: 1.6;
                 white-space: pre-wrap;
                 word-wrap: break-word;
+                min-height: 400px;
+            }}
+            .lyric-line {{
+                margin: 10px 0;
+                min-height: 20px;
             }}
         </style>
     </head>
     <body>
-        <pre>{lyrics_html}</pre>
+        <div id="lyrics"></div>
+        
+        <script>
+            const lyricsData = {json.dumps(lyrics_json)};
+            
+            async function animateLyrics() {{
+                const lyricsDiv = document.getElementById('lyrics');
+                
+                for (let lyricData of lyricsData) {{
+                    // Wait for the delay
+                    await new Promise(resolve => setTimeout(resolve, lyricData.delay * 1000));
+                    
+                    // Create a new line
+                    const lineDiv = document.createElement('div');
+                    lineDiv.className = 'lyric-line';
+                    lyricsDiv.appendChild(lineDiv);
+                    
+                    // Animate text character by character
+                    for (let char of lyricData.text) {{
+                        lineDiv.textContent += char;
+                        await new Promise(resolve => setTimeout(resolve, lyricData.speed * 100));
+                    }}
+                }}
+            }}
+            
+            // Start animation when page loads
+            animateLyrics();
+        </script>
     </body>
     </html>
     """
