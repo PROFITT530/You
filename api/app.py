@@ -1,20 +1,21 @@
 from flask import Flask
+import json
 
 app = Flask(__name__)
 
 @app.route('/')
 def sing():
-    """Render the song with client-side animation."""
+    """Render the song with optimized client-side animation."""
     lyrics = [
-        ("Do you think I have forgotten?", 0.1),
-        ("Do you think I have forgotten?", 0.1),
-        ("Do you think I have forgotten", 0.1),
-        ("about you?", 0.2),
-        ("There was something bout you that now I cant remember", 0.08),
-        ("Its the same damn thing that made my heart surrender", 0.1),
-        ("And I miss you on a train, I miss you in the morning", 0.1),
-        ("I never know what to think about", 0.1),
-        ("I think about youuuuuuuuuuuuuuuuuuuuuuuuuuu", 0.1)
+        ("Do you think I have forgotten?", 0.05),
+        ("Do you think I have forgotten?", 0.05),
+        ("Do you think I have forgotten", 0.05),
+        ("about you?", 0.1),
+        ("There was something bout you that now I cant remember", 0.04),
+        ("Its the same damn thing that made my heart surrender", 0.05),
+        ("And I miss you on a train, I miss you in the morning", 0.05),
+        ("I never know what to think about", 0.05),
+        ("I think about youuuuuuuuuuuuuuuuuuuuuuuuuuu", 0.05)
     ]
     
     lyrics_json = []
@@ -33,24 +34,54 @@ def sing():
     <head>
         <title>About You</title>
         <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
             body {{
-                font-family: monospace;
-                background-color: #1a1a1a;
+                font-family: 'Courier New', monospace;
+                background: linear-gradient(135deg, #0a0e27 0%, #1a1a3a 100%);
                 color: #00ff00;
                 padding: 40px;
                 min-height: 100vh;
-                margin: 0;
+                overflow-x: hidden;
             }}
             #lyrics {{
-                font-size: 18px;
-                line-height: 1.6;
+                font-size: 20px;
+                line-height: 1.8;
                 white-space: pre-wrap;
                 word-wrap: break-word;
                 min-height: 400px;
+                text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+                letter-spacing: 1px;
             }}
             .lyric-line {{
-                margin: 10px 0;
-                min-height: 20px;
+                margin: 12px 0;
+                min-height: 24px;
+                animation: fadeIn 0.3s ease-in;
+            }}
+            @keyframes fadeIn {{
+                from {{
+                    opacity: 0;
+                    text-shadow: 0 0 0px rgba(0, 255, 0, 0);
+                }}
+                to {{
+                    opacity: 1;
+                    text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+                }}
+            }}
+            .cursor {{
+                display: inline-block;
+                width: 2px;
+                height: 1em;
+                background-color: #00ff00;
+                margin-left: 2px;
+                animation: blink 0.7s infinite;
+            }}
+            @keyframes blink {{
+                0%, 49% {{ opacity: 1; }}
+                50%, 100% {{ opacity: 0; }}
             }}
         </style>
     </head>
@@ -73,15 +104,23 @@ def sing():
                     lyricsDiv.appendChild(lineDiv);
                     
                     // Animate text character by character
-                    for (let char of lyricData.text) {{
-                        lineDiv.textContent += char;
-                        await new Promise(resolve => setTimeout(resolve, lyricData.speed * 100));
+                    const text = lyricData.text;
+                    const speed = lyricData.speed * 50; // Optimize speed
+                    
+                    for (let i = 0; i < text.length; i++) {{
+                        lineDiv.textContent = text.substring(0, i + 1);
+                        await new Promise(resolve => setTimeout(resolve, speed));
                     }}
                 }}
+                
+                // Add cursor at the end
+                const cursor = document.createElement('span');
+                cursor.className = 'cursor';
+                lyricsDiv.appendChild(cursor);
             }}
             
             // Start animation when page loads
-            animateLyrics();
+            window.addEventListener('load', animateLyrics);
         </script>
     </body>
     </html>
